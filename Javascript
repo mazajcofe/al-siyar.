@@ -1,0 +1,75 @@
+// ===== أسعار أولية =====
+let rates = { USD:14500, EUR:15800, TRY:450, OLD:1, NEW:100 };
+
+// ===== تحديث الأسعار من API =====
+async function fetchRates(){
+    try{
+        const response = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=EUR,TRY,SYP');
+        const data = await response.json();
+        if(data && data.rates){
+            rates.USD = 14500;
+            rates.EUR = data.rates.EUR*14500/data.rates.USD || rates.EUR;
+            rates.TRY = data.rates.TRY*14500/data.rates.USD || rates.TRY;
+        }
+    } catch(err){ console.warn("تعذر تحديث الأسعار:", err); }
+}
+fetchRates();
+
+// ===== دالة التحويل =====
+function convert(){
+    let amount = parseFloat(document.getElementById("amount").value);
+    let from = document.getElementById("from").value;
+    let to = document.getElementById("to").value;
+    if(isNaN(amount) || amount<=0){
+        document.getElementById("result").innerHTML = "<span style='color:red'>أدخل مبلغ صالح أكبر من صفر</span>";
+        return;
+    }
+    let syp = amount*rates[from];
+    let result = syp/rates[to];
+    document.getElementById("result").innerHTML = `النتيجة: <b>${result.toLocaleString("ar-EG")}</b> ${to}`;
+    saveHistory(amount,from,result,to);
+}
+
+// ===== حفظ التاريخ في localStorage =====
+function saveHistory(amount,from,result,to){
+    let history = JSON.parse(localStorage.getItem("convertHistory")||"[]");
+    history.unshift(`${amount} ${from} → ${result.toLocaleString("ar-EG")} ${to}`);
+    if(history.length>5) history.pop();
+    localStorage.setItem("convertHistory",JSON.stringify(history));
+    displayHistory();
+}
+
+function displayHistory(){
+    let history = JSON.parse(localStorage.getItem("convertHistory")||"[]");
+    let container = document.getElementById("history");
+    container.innerHTML = "<b>آخر التحويلات:</b><br>";
+    history.forEach(item=>{
+        let div=document.createElement("div");
+        div.className="history-item";
+        div.innerHTML=item;
+        container.appendChild(div);
+    });
+}
+
+function clearHistory(){ localStorage.removeItem("convertHistory"); displayHistory(); }
+
+document.getElementById("amount").addEventListener("keypress",e=>{
+    if(e.key==="Enter") convert();
+});
+
+displayHistory();
+
+// ===== Service Worker داخل نفس الملف =====
+if('serviceWorker' in navigator){
+    const swCode = `
+        const CACHE_NAME="currency-app-v1";
+        const urlsToCache=["./","./syria.png"];
+        self.addEventListener("install", e=>{e.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(urlsToCache)));});
+        self.addEventListener("fetch", e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});
+    `;
+    const blob = new Blob([swCode], {type:'application/javascript'});
+    const swURL = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swURL)
+        .then(reg=>console.log("Service Worker مسجل",reg))
+        .catch(err=>console.warn("Service Worker فشل التسجيل",err));
+}
