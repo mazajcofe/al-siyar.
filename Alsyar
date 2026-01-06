@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>السيار شام - تحويل العملات</title>
+
+<!-- رابط CSS لتنسيق التصميم -->
+<link rel="stylesheet" href="style.css">
+
+<!-- Manifest داخل نفس الملف باستخدام blob URL -->
+<script>
+const manifestContent = {
+  "name": "السيار شام",
+  "short_name": "السيار شام",
+  "description": "تحويل العملات – سوريا",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#d4af37",
+  "icons": [
+    {"src": "syria.png","sizes": "192x192","type": "image/png"},
+    {"src": "syria.png","sizes": "512x512","type": "image/png"}
+  ]
+};
+const manifestBlob = new Blob([JSON.stringify(manifestContent)], {type: 'application/json'});
+const manifestURL = URL.createObjectURL(manifestBlob);
+const link = document.createElement('link');
+link.rel = 'manifest';
+link.href = manifestURL;
+document.head.appendChild(link);
+</script>
+
+<link rel="icon" href="syria.png">
+
+</head>
+<body>
+
+<header>
+    <img src="syria.png" alt="علم سوريا">
+    <h1>السيار شام</h1>
+    <p>تحويل العملات – سوريا</p>
+</header>
+
+<main class="container">
+    <input type="number" id="amount" placeholder="أدخل المبلغ">
+    <select id="from">
+        <option value="USD">دولار</option>
+        <option value="EUR">يورو</option>
+        <option value="TRY">ليرة تركية</option>
+        <option value="OLD">ليرة سورية قديمة</option>
+        <option value="NEW">ليرة سورية جديدة</option>
+    </select>
+    <select id="to">
+        <option value="OLD">ليرة سورية قديمة</option>
+        <option value="NEW">ليرة سورية جديدة</option>
+        <option value="USD">دولار</option>
+        <option value="EUR">يورو</option>
+        <option value="TRY">ليرة تركية</option>
+    </select>
+    <button onclick="convert()">تحويل</button>
+    <div class="result" id="result"></div>
+
+    <div id="history"></div>
+    <button class="clear-btn" onclick="clearHistory()">مسح التحويلات</button>
+</main>
+
+<footer>© السيار شام – أسعار تقريبية</footer>
+
+<script src="script.js"></script>
+
+</body>
+</html>
